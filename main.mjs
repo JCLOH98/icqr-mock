@@ -70,6 +70,8 @@ let generateVisual = () => {
     }
     scene.add(final_cube);
     final_cube.rotation.z = -Math.PI / 2;
+    final_cube.position.x = -pixel_size_1d / 2;
+    final_cube.position.y = pixel_size_1d / 2;
 }
 getQrCodeMatrix();
 generateVisual();
