@@ -62,7 +62,7 @@ let generateLight = () => {
 
 // generate 3d visuals
 let finder_size = 7;
-let fence_height = 3;
+let fence_height = 2;
 const FENCE_COLOR = "#888888";
 let trunk_height = 4;
 const TRUNK_COLOR = "#8B4513";
@@ -72,10 +72,6 @@ const DARK_GREEN = "#006400";
 const WATER_COLOR = "#112d54";
 const GROUND_COLOR = "#555555";
 let generateFinderTree = (start_row_idx, start_col_idx) => {
-    // row = 0, col = 0
-    // row = 1, col = 0
-    // row = start_row_idx, col = 0
-    // row = start_row_idx + 1, col = 1 
 
     let tree_obj = new THREE.Object3D()
     for (let row = start_row_idx; row < start_row_idx + finder_size; row++) {
@@ -195,7 +191,10 @@ let generateVisual = () => {
                 else if (pixel_list[row][col] == 0) {
                     color = DARK_GREEN;
                 }
-                const material = new THREE.MeshPhongMaterial({ emissive: color });
+                else if (z == 0) {
+                    color = GROUND_COLOR;
+                }
+                const material = new THREE.MeshPhongMaterial({ color: color });
                 const cube = new THREE.Mesh(geometry, material);
                 cube.position.x = row;
                 cube.position.y = col;
@@ -219,6 +218,9 @@ let generateVisual = () => {
                         continue;
                     }
 
+                }
+                else if (z == 0) {
+                    cube.position.z = 0;
                 }
                 else {
                     continue;
@@ -253,7 +255,7 @@ let generateQR = () => {
 generate_qr_btn.onclick = generateQR;
 
 // for tree visualization
-camera.position.z = pixel_size_1d * 2;
+camera.position.z = pixel_size_1d;
 
 
 const controls = new OrbitControls(camera, renderer.domElement);
