@@ -60,7 +60,7 @@ let generateLight = () => {
     scene.add(dir_light);
 }
 
-// TOFIX: generate 3d for now
+// generate 3d visuals
 let finder_size = 7;
 let fence_height = 3;
 const FENCE_COLOR = "#888888";
@@ -69,10 +69,15 @@ const TRUNK_COLOR = "#8B4513";
 let leaves_height = 3;
 const LEAVES_COLOR = "#00ff00";
 const WATER_COLOR = "#112d54";
-let generateFinderTree = () => {
+let generateFinderTree = (start_row_idx, start_col_idx) => {
+    // row = 0, col = 0
+    // row = 1, col = 0
+    // row = start_row_idx, col = 0
+    // row = start_row_idx + 1, col = 1 
+
     let tree_obj = new THREE.Object3D()
-    for (let row = 0; row < finder_size; row++) {
-        for (let col = 0; col < finder_size; col++) {
+    for (let row = start_row_idx; row < start_row_idx + finder_size; row++) {
+        for (let col = start_col_idx; col < start_col_idx + finder_size; col++) {
 
             // empty space as water
             if (pixel_list[row][col] == 0) {
@@ -87,8 +92,8 @@ let generateFinderTree = () => {
                 tree_obj.add(water_cube);
             }
 
-            let is_fence = (row == 0 || col == 0 || row == finder_size - 1 || col == finder_size - 1);
-            let is_trunk = row == Math.floor(finder_size / 2) && col == Math.floor(finder_size / 2);
+            let is_fence = (row == start_row_idx || col == start_col_idx || row == start_row_idx + finder_size - 1 || col == start_col_idx + finder_size - 1);
+            let is_trunk = row == start_row_idx + Math.floor(finder_size / 2) && col == start_col_idx + Math.floor(finder_size / 2);
 
             for (let z = 0; z < finder_size; z++) {
                 if (z == 0) {
@@ -157,32 +162,78 @@ let generateVisual = () => {
 
     generateLight();
 
-    const final_cube = new THREE.Object3D()
-    let tree_object = generateFinderTree()
-    final_cube.add(tree_object)
+    const final_cube = new THREE.Object3D();
+    let tree_1 = generateFinderTree(0, 0);
+    let tree_2 = generateFinderTree(0, pixel_size_1d - finder_size);
+    let tree_3 = generateFinderTree(pixel_size_1d - finder_size, 0);
+    final_cube.add(tree_1);
+    final_cube.add(tree_2);
+    final_cube.add(tree_3);
+
+    const main_tree = new THREE.Object3D();
+    const main_trunk_height = 10;
+    const main_trunk_size = 3;
+    const main_leaves_height_max = 10;
     for (let row = 0; row < pixel_size_1d; row++) {
         for (let col = 0; col < pixel_size_1d; col++) {
-
             const geometry = new THREE.BoxGeometry(1, 1, 1);
             const random_color = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
 
-            if (pixel_list[row][col] == 0) {
-                continue
-            }
-
-            let color = random_color;
             if (row < finder_size && col < finder_size || row >= pixel_size_1d - finder_size && col < finder_size || row < finder_size && col >= pixel_size_1d - finder_size) {
                 // this is where the finder tree located
                 continue;
             }
 
-            const material = new THREE.MeshPhongMaterial({ emissive: color });
-            const cube = new THREE.Mesh(geometry, material);
-            cube.position.x = row;
-            cube.position.y = col;
-            final_cube.add(cube);
+            for (let z = 0; z < pixel_size_1d; z++) {
+                let color = LEAVES_COLOR;
+
+                let is_trunk = row < Math.floor(pixel_size_1d / 2 + main_trunk_size / 2) && col < Math.floor(pixel_size_1d / 2 + main_trunk_size / 2) && row >= Math.floor(pixel_size_1d / 2 - main_trunk_size / 2) && col >= Math.floor(pixel_size_1d / 2 - main_trunk_size / 2) && z < main_trunk_height;
+
+                if (is_trunk) {
+                    color = TRUNK_COLOR;
+                }
+                else if (pixel_list[row][col] == 0) {
+                    color = WATER_COLOR;
+                }
+                const material = new THREE.MeshPhongMaterial({ emissive: color });
+                const cube = new THREE.Mesh(geometry, material);
+                cube.position.x = row;
+                cube.position.y = col;
+
+                let max_leaves_z = Math.min(pixel_size_1d - 1, main_trunk_height + main_leaves_height_max);
+                if (is_trunk) {
+                    cube.position.z = z;
+                }
+                else if (z == max_leaves_z) {
+                    cube.position.z = z;
+                    if (pixel_list[row][col] == 0) {
+                        continue;
+                    }
+                }
+                else if (z >= main_trunk_height && z < main_trunk_height + main_leaves_height_max) {
+                    const show_leaves = Math.floor(Math.random() * 2);
+                    if (pixel_list[row][col] == 1 && show_leaves) {
+                        cube.position.z = z;
+                    }
+                    else if (show_leaves) {
+                        color = WATER_COLOR;
+                        cube.position.z = z;
+                    }
+                    else {
+                        continue;
+                    }
+
+                }
+                else {
+                    continue;
+                }
+                main_tree.add(cube);
+            }
         }
     }
+    final_cube.add(main_tree);
+
+    // the final object 3d
     scene.add(final_cube);
     final_cube.rotation.z = -Math.PI / 2;
     final_cube.position.x = -pixel_size_1d / 2;
@@ -192,7 +243,6 @@ getQrCodeMatrix();
 generateVisual();
 
 const generate_qr_btn = document.getElementById("generate-qr-button");
-
 
 
 let generateQR = () => {
