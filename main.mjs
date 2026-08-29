@@ -68,7 +68,9 @@ let trunk_height = 4;
 const TRUNK_COLOR = "#8B4513";
 let leaves_height = 3;
 const LEAVES_COLOR = "#00ff00";
+const DARK_GREEN = "#006400";
 const WATER_COLOR = "#112d54";
+const GROUND_COLOR = "#555555";
 let generateFinderTree = (start_row_idx, start_col_idx) => {
     // row = 0, col = 0
     // row = 1, col = 0
@@ -177,8 +179,6 @@ let generateVisual = () => {
     for (let row = 0; row < pixel_size_1d; row++) {
         for (let col = 0; col < pixel_size_1d; col++) {
             const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const random_color = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
-
             if (row < finder_size && col < finder_size || row >= pixel_size_1d - finder_size && col < finder_size || row < finder_size && col >= pixel_size_1d - finder_size) {
                 // this is where the finder tree located
                 continue;
@@ -193,7 +193,7 @@ let generateVisual = () => {
                     color = TRUNK_COLOR;
                 }
                 else if (pixel_list[row][col] == 0) {
-                    color = WATER_COLOR;
+                    color = DARK_GREEN;
                 }
                 const material = new THREE.MeshPhongMaterial({ emissive: color });
                 const cube = new THREE.Mesh(geometry, material);
@@ -211,12 +211,8 @@ let generateVisual = () => {
                     }
                 }
                 else if (z >= main_trunk_height && z < main_trunk_height + main_leaves_height_max) {
-                    const show_leaves = Math.floor(Math.random() * 2);
-                    if (pixel_list[row][col] == 1 && show_leaves) {
-                        cube.position.z = z;
-                    }
-                    else if (show_leaves) {
-                        color = WATER_COLOR;
+                    const show_leaves = Math.floor(Math.random() * 10);
+                    if (show_leaves === 1) {
                         cube.position.z = z;
                     }
                     else {
