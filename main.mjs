@@ -21,9 +21,10 @@ function resizeRendererToDisplaySize(renderer) {
     }
     return needResize;
 }
+
 const light_color = "#999999";
-const light_intensity = 1;
-const dir_light = new THREE.DirectionalLight(light_color, light_intensity);
+const dir_light_intensity = 10;
+const dir_light = new THREE.DirectionalLight(light_color, dir_light_intensity);
 
 // init qr items
 const qr_elem = document.getElementById("qr-code");
@@ -56,7 +57,6 @@ let getQrCodeMatrix = () => {
 }
 
 let generateLight = () => {
-    dir_light.position.set(camera.position.x, camera.position.y, camera.position.z);
     scene.add(dir_light);
 }
 
@@ -82,7 +82,7 @@ let generateFinderTree = (start_row_idx, start_col_idx) => {
                 let color = WATER_COLOR;
 
                 const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshPhongMaterial({ emissive: color });
+                const material = new THREE.MeshPhongMaterial({ color: color });
                 const water_cube = new THREE.Mesh(geometry, material);
                 water_cube.position.x = row;
                 water_cube.position.y = col;
@@ -100,7 +100,7 @@ let generateFinderTree = (start_row_idx, start_col_idx) => {
                         let color = WATER_COLOR;
 
                         const geometry = new THREE.BoxGeometry(1, 1, 1);
-                        const material = new THREE.MeshPhongMaterial({ emissive: color });
+                        const material = new THREE.MeshPhongMaterial({ color: color });
                         const water_cube = new THREE.Mesh(geometry, material);
                         water_cube.position.x = row;
                         water_cube.position.y = col;
@@ -114,7 +114,7 @@ let generateFinderTree = (start_row_idx, start_col_idx) => {
                     let color = FENCE_COLOR;
 
                     const geometry = new THREE.BoxGeometry(1, 1, 1);
-                    const material = new THREE.MeshPhongMaterial({ emissive: color });
+                    const material = new THREE.MeshPhongMaterial({ color: color });
                     const fence_cube = new THREE.Mesh(geometry, material);
                     fence_cube.position.x = row;
                     fence_cube.position.y = col;
@@ -128,7 +128,7 @@ let generateFinderTree = (start_row_idx, start_col_idx) => {
                     let color = TRUNK_COLOR;
 
                     const geometry = new THREE.BoxGeometry(1, 1, 1);
-                    const material = new THREE.MeshPhongMaterial({ emissive: color });
+                    const material = new THREE.MeshPhongMaterial({ color: color });
                     const trunk_cube = new THREE.Mesh(geometry, material);
                     trunk_cube.position.x = row;
                     trunk_cube.position.y = col;
@@ -142,7 +142,7 @@ let generateFinderTree = (start_row_idx, start_col_idx) => {
                         let color = LEAVES_COLOR;
 
                         const geometry = new THREE.BoxGeometry(1, 1, 1);
-                        const material = new THREE.MeshPhongMaterial({ emissive: color });
+                        const material = new THREE.MeshPhongMaterial({ color: color });
                         const leaves_cube = new THREE.Mesh(geometry, material);
                         leaves_cube.position.x = row;
                         leaves_cube.position.y = col;
@@ -159,6 +159,14 @@ let generateVisual = () => {
     scene.clear();
 
     generateLight();
+
+    // update the camera pos
+    const ortho_zoom = pixel_size_1d * 2;
+    camera.left = -ortho_zoom * aspect / 2;
+    camera.right = ortho_zoom * aspect / 2;
+    camera.top = ortho_zoom / 2;
+    camera.bottom = -ortho_zoom / 2;
+    camera.updateProjectionMatrix();
 
     const final_cube = new THREE.Object3D();
     let tree_1 = generateFinderTree(0, 0);
@@ -261,9 +269,12 @@ camera.position.z = pixel_size_1d;
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.update();
 function animate() {
+    dir_light.position.x = camera.position.x;
+    dir_light.position.y = camera.position.y;
+    dir_light.position.z = camera.position.z;
+
     // required if controls.enableDamping or controls.autoRotate are set to true
     controls.update();
-    dir_light.position.set(camera.position.x, camera.position.y, camera.position.z);
     if (resizeRendererToDisplaySize(renderer)) {
         camera.aspect = renderer.domElement.clientWidth / renderer.domElement.clientHeight;
         camera.updateProjectionMatrix();
