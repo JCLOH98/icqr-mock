@@ -7,6 +7,10 @@ this is a repo try to recreate the icqr tree using threejs
 2. get the qr matrix/list
 3. generate the visual base on it
 
+## visualization
+1. 7x7 of each corner is grass (z=0)
+2. 
+
 ## run
 - `python -m http.server `
 
