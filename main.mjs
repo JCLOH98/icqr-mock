@@ -31,12 +31,8 @@ function switchCamera(newCamera) {
     // 6. Bind the new camera to a fresh control instance
     camera = newCamera;
     controls = new TrackballControls(camera, renderer.domElement);
-
-    // 7. Restore the look-at target back to the controls
+    controls.panSpeed = 1;
     controls.target.copy(currentTarget);
-
-    // 8. Reapply custom parameters
-    controls.panSpeed = 1.0;
 
     // 9. Force internal matrices to recalculate immediately
     controls.update();
@@ -65,7 +61,7 @@ function resetCameraUpright() {
     controls.dispose();
     controls = new TrackballControls(camera, renderer.domElement);
     controls.target.copy(targetPoint);
-    controls.panSpeed = 1.0;
+    controls.panSpeed = 1;
 
     // 6. Force clean redraw matrix pipeline
     controls.update();
@@ -353,7 +349,6 @@ camera.position.z = pixel_size_1d * 2;
 
 let controls = new TrackballControls(camera, renderer.domElement);
 controls.panSpeed = 1;
-controls.dynamicDampingFactor = 0.1;
 controls.update();
 function animate() {
     dir_light.position.x = camera.position.x;
