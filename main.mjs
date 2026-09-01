@@ -248,7 +248,7 @@ let generateVisual = () => {
 getQrCodeMatrix();
 generateVisual();
 
-const generate_qr_btn = document.getElementById("generate-qr-button");
+const qr_input_button = document.getElementById("qr-input-button");
 
 
 let generateQR = () => {
@@ -260,7 +260,7 @@ let generateQR = () => {
     // update the render as well
     generateVisual();
 };
-generate_qr_btn.onclick = generateQR;
+qr_input_button.onclick = generateQR;
 
 // for tree visualization
 camera.position.z = pixel_size_1d;
