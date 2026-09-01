@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 
 // init canvas items
 const scene = new THREE.Scene();
@@ -11,29 +11,69 @@ const zoomNum = 50;
 const ortho_camera = new THREE.OrthographicCamera(-zoomNum * aspect / 2, zoomNum * aspect / 2, zoomNum / 2, -zoomNum / 2, 0.1, 1000);
 
 let camera = ortho_camera;
-document.getElementById("persp-cam-button").onclick = () => {
-    persp_camera.position.copy(camera.position);
-    persp_camera.quaternion.copy(camera.quaternion);
-    camera = persp_camera;
+function switchCamera(newCamera) {
+    // 1. Store the exact target point the user was rotating around
+    const currentTarget = controls.target.clone();
 
-    //update the control
-    controls.object = camera;
+    // 2. Align positions precisely
+    newCamera.position.copy(camera.position);
+
+    // 3. CRITICAL: Pass the "up" orientation vector to keep the camera right-side up
+    newCamera.up.copy(camera.up);
+
+    // 4. CRITICAL: Force the new camera to face the target point before controls take over
+    newCamera.lookAt(currentTarget);
+    newCamera.updateProjectionMatrix();
+
+    // 5. Clean up old controls and release DOM listeners
+    controls.dispose();
+
+    // 6. Bind the new camera to a fresh control instance
+    camera = newCamera;
+    controls = new TrackballControls(camera, renderer.domElement);
+
+    // 7. Restore the look-at target back to the controls
+    controls.target.copy(currentTarget);
+
+    // 8. Reapply custom parameters
+    controls.panSpeed = 1.0;
+
+    // 9. Force internal matrices to recalculate immediately
     controls.update();
 }
 
-document.getElementById("ortho-cam-button").onclick = () => {
-    ortho_camera.position.copy(camera.position);
-    ortho_camera.quaternion.copy(camera.quaternion);
-    camera = ortho_camera;
+// Button bindings
+document.getElementById("persp-cam-button").onclick = () => switchCamera(persp_camera);
+document.getElementById("ortho-cam-button").onclick = () => switchCamera(ortho_camera);
 
-    //update the control
-    controls.object = camera;
+function resetCameraUpright() {
+    // 1. Define your scene center target (usually 0,0,0 or an object position)
+    const targetPoint = new THREE.Vector3(0, 0, 0);
+
+    // 2. CRITICAL: Reset the world up-vector to standard positive Y
+    camera.up.set(0, 1, 0);
+
+    // 3. Position the camera at a neutral distance away from the target
+    // (Adjust the 10, 10, 10 to whatever distance fits your scene size)
+    camera.position.set(0, 0, pixel_size_1d * 2);
+
+    // 4. Force the camera matrix to face the target using the clean up-vector
+    camera.lookAt(targetPoint);
+    camera.updateProjectionMatrix();
+
+    // 5. Update controls target and force an internal mathematical reset
+    controls.dispose();
+    controls = new TrackballControls(camera, renderer.domElement);
+    controls.target.copy(targetPoint);
+    controls.panSpeed = 1.0;
+
+    // 6. Force clean redraw matrix pipeline
     controls.update();
 }
 
 document.getElementById("reset-button").onclick = () => {
-    document.getElementById("ortho-cam-button").click();
-    camera.position.set(0, 0, pixel_size_1d * 2);
+    resetCameraUpright();
+    switchCamera(ortho_camera);
 }
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -311,8 +351,9 @@ qr_input_button.onclick = generateQR;
 // for tree visualization
 camera.position.z = pixel_size_1d * 2;
 
-
-const controls = new OrbitControls(camera, renderer.domElement);
+let controls = new TrackballControls(camera, renderer.domElement);
+controls.panSpeed = 1;
+controls.dynamicDampingFactor = 0.1;
 controls.update();
 function animate() {
     dir_light.position.x = camera.position.x;
