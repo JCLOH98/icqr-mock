@@ -182,13 +182,14 @@ let generateVisual = () => {
     scene.clear();
 
     generateLight();
-
     // update the camera pos
-    const ortho_zoom = pixel_size_1d * 2;
-    camera.left = -ortho_zoom * aspect / 2;
-    camera.right = ortho_zoom * aspect / 2;
-    camera.top = ortho_zoom / 2;
-    camera.bottom = -ortho_zoom / 2;
+    const zoom = pixel_size_1d * 2;
+    camera.position.z = zoom;
+
+    camera.left = -zoom * aspect / 2;
+    camera.right = zoom * aspect / 2;
+    camera.top = zoom / 2;
+    camera.bottom = -zoom / 2;
     camera.updateProjectionMatrix();
 
     const final_cube = new THREE.Object3D();
@@ -285,7 +286,7 @@ let generateQR = () => {
 qr_input_button.onclick = generateQR;
 
 // for tree visualization
-camera.position.z = pixel_size_1d;
+camera.position.z = pixel_size_1d * 2;
 
 
 const controls = new OrbitControls(camera, renderer.domElement);
