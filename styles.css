@@ -23,10 +23,10 @@ h1 {
     margin: 3px;
 }
 
-#qr-input {
+input[type="text"] {
     padding: 5px;
 }
 
-#qr-input-button {
+input[type="button"] {
     padding: 5px;
 }

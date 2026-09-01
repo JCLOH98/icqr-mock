@@ -5,9 +5,32 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 const scene = new THREE.Scene();
 const canvas = document.getElementById("qr-tree");
 const aspect = canvas.clientWidth / canvas.clientHeight;
-// const camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
+
+const persp_camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
 const zoomNum = 50;
-const camera = new THREE.OrthographicCamera(-zoomNum * aspect / 2, zoomNum * aspect / 2, zoomNum / 2, -zoomNum / 2, 0.1, 1000);
+const ortho_camera = new THREE.OrthographicCamera(-zoomNum * aspect / 2, zoomNum * aspect / 2, zoomNum / 2, -zoomNum / 2, 0.1, 1000);
+
+let camera = ortho_camera;
+document.getElementById("persp-cam-button").onclick = () => {
+    persp_camera.position.copy(camera.position);
+    persp_camera.quaternion.copy(camera.quaternion);
+    camera = persp_camera;
+
+    //update the control
+    controls.object = camera;
+    constrols.update()
+}
+
+document.getElementById("ortho-cam-button").onclick = () => {
+    ortho_camera.position.copy(camera.position);
+    ortho_camera.quaternion.copy(camera.quaternion);
+    camera = ortho_camera;
+
+    //update the control
+    controls.object = camera;
+    constrols.update()
+}
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 function resizeRendererToDisplaySize(renderer) {
     // ref: https://threejs.org/manual/#en/responsive
@@ -249,7 +272,6 @@ getQrCodeMatrix();
 generateVisual();
 
 const qr_input_button = document.getElementById("qr-input-button");
-
 
 let generateQR = () => {
     const qrInput = document.getElementById("qr-input");
