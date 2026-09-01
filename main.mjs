@@ -18,7 +18,7 @@ document.getElementById("persp-cam-button").onclick = () => {
 
     //update the control
     controls.object = camera;
-    constrols.update()
+    controls.update();
 }
 
 document.getElementById("ortho-cam-button").onclick = () => {
@@ -28,7 +28,12 @@ document.getElementById("ortho-cam-button").onclick = () => {
 
     //update the control
     controls.object = camera;
-    constrols.update()
+    controls.update();
+}
+
+document.getElementById("reset-button").onclick = () => {
+    document.getElementById("ortho-cam-button").click();
+    camera.position.set(0, 0, pixel_size_1d * 2);
 }
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
