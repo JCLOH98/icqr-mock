@@ -93,7 +93,7 @@ let leaves_height = 3;
 const LEAVES_COLOR = "#00ff00";
 const DARK_GREEN = "#006400";
 const WATER_COLOR = "#112d54";
-const GROUND_COLOR = "#555555";
+const GROUND_COLOR = "#1f4027";
 let generateFinderTree = (start_row_idx, start_col_idx) => {
 
     let tree_obj = new THREE.Object3D()
@@ -184,7 +184,6 @@ let generateVisual = () => {
     generateLight();
     // update the camera pos
     const zoom = pixel_size_1d * 2;
-    camera.position.z = zoom;
 
     camera.left = -zoom * aspect / 2;
     camera.right = zoom * aspect / 2;
@@ -204,6 +203,31 @@ let generateVisual = () => {
     const main_trunk_height = 10;
     const main_trunk_size = 3;
     const main_leaves_height_max = 10;
+
+
+    let max_leaves_z = Math.min(pixel_size_1d - 1, main_trunk_height + main_leaves_height_max);
+    let min_leaves_z = main_trunk_height;
+
+    // generate a 2d map that indicates where the position of the pixel
+    let leaves_list = [];
+    for (let row = 0; row < pixel_size_1d; row++) {
+        let leaves_row_list = [];
+        for (let col = 0; col < pixel_size_1d; col++) {
+
+            // the range of the leaves pixel should be from
+            // main_trunk_height (include) to main_trunk_height + main_leaves_height_max (exclude)
+            const leaf_val = Math.floor((Math.random() * (max_leaves_z - min_leaves_z)) + min_leaves_z);
+            if (pixel_list[row][col] == 1) {
+                leaves_row_list.push(leaf_val)
+            }
+            else {
+                leaves_row_list.push(0)
+            }
+        }
+        leaves_list.push(leaves_row_list);
+    }
+    console.log("leaves_list", leaves_list);
+
     for (let row = 0; row < pixel_size_1d; row++) {
         for (let col = 0; col < pixel_size_1d; col++) {
             const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -220,28 +244,26 @@ let generateVisual = () => {
                 if (is_trunk) {
                     color = TRUNK_COLOR;
                 }
-                else if (pixel_list[row][col] == 0) {
-                    color = DARK_GREEN;
-                }
                 else if (z == 0) {
                     color = GROUND_COLOR;
+                }
+                else if (pixel_list[row][col] == 0 || leaves_list[row][col] != z) {
+                    color = DARK_GREEN;
                 }
                 const material = new THREE.MeshPhongMaterial({ color: color });
                 const cube = new THREE.Mesh(geometry, material);
                 cube.position.x = row;
                 cube.position.y = col;
-
-                let max_leaves_z = Math.min(pixel_size_1d - 1, main_trunk_height + main_leaves_height_max);
                 if (is_trunk) {
                     cube.position.z = z;
                 }
-                else if (z == max_leaves_z) {
-                    cube.position.z = z;
-                    if (pixel_list[row][col] == 0) {
-                        continue;
-                    }
+                else if (z == 0) {
+                    cube.position.z = 0;
                 }
-                else if (z >= main_trunk_height && z < main_trunk_height + main_leaves_height_max) {
+                else if (leaves_list[row][col] !== 0 && z == leaves_list[row][col]) {
+                    cube.position.z = z;
+                }
+                else if (z < leaves_list[row][col] && z > min_leaves_z || pixel_list[row][col] == 0 && z > main_trunk_height && z < max_leaves_z) {
                     const show_leaves = Math.floor(Math.random() * 10);
                     if (show_leaves === 1) {
                         cube.position.z = z;
@@ -249,10 +271,6 @@ let generateVisual = () => {
                     else {
                         continue;
                     }
-
-                }
-                else if (z == 0) {
-                    cube.position.z = 0;
                 }
                 else {
                     continue;
