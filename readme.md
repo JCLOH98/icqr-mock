@@ -7,13 +7,13 @@ this is a repo try to recreate the icqr tree using threejs
 2. get the qr matrix/list
 3. generate the visual base on it
 
-## interaction
-- left mouse rotate
-- right mouse pan
-- middle mouse zoom
+## animation
+- initial view showing the animated tree (perspective camera)
+- when show qr code is clicked then show the qr code (ortho camera)
+- after around X seconds, show back the animated tree
 
 ## run
-- `python -m http.server `
+- `python -m http.server`
 
 ## reference
 - https://tree.icqr.com/
