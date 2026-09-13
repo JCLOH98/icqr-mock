@@ -10,7 +10,7 @@ const persp_camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
 const zoomNum = 50;
 const ortho_camera = new THREE.OrthographicCamera(-zoomNum * aspect / 2, zoomNum * aspect / 2, zoomNum / 2, -zoomNum / 2, 0.1, 1000);
 
-let camera = persp_camera;
+let camera = ortho_camera;
 function switchCamera(newCamera) {
     // 1. Store the exact target point the user was rotating around
     const currentTarget = controls.target.clone();
