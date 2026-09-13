@@ -10,7 +10,7 @@ const persp_camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
 const zoomNum = 50;
 const ortho_camera = new THREE.OrthographicCamera(-zoomNum * aspect / 2, zoomNum * aspect / 2, zoomNum / 2, -zoomNum / 2, 0.1, 1000);
 
-let camera = ortho_camera;
+let camera = persp_camera;
 function switchCamera(newCamera) {
     // 1. Store the exact target point the user was rotating around
     const currentTarget = controls.target.clone();
@@ -31,7 +31,8 @@ function switchCamera(newCamera) {
     // 6. Bind the new camera to a fresh control instance
     camera = newCamera;
     controls = new TrackballControls(camera, renderer.domElement);
-    controls.panSpeed = 1;
+    controls.noPan = true;
+    controls.noRotate = true;
     controls.target.copy(currentTarget);
 
     // 9. Force internal matrices to recalculate immediately
@@ -41,36 +42,6 @@ function switchCamera(newCamera) {
 // Button bindings
 document.getElementById("persp-cam-button").onclick = () => switchCamera(persp_camera);
 document.getElementById("ortho-cam-button").onclick = () => switchCamera(ortho_camera);
-
-function resetCameraUpright() {
-    // 1. Define your scene center target (usually 0,0,0 or an object position)
-    const targetPoint = new THREE.Vector3(0, 0, 0);
-
-    // 2. CRITICAL: Reset the world up-vector to standard positive Y
-    camera.up.set(0, 1, 0);
-
-    // 3. Position the camera at a neutral distance away from the target
-    // (Adjust the 10, 10, 10 to whatever distance fits your scene size)
-    camera.position.set(0, 0, pixel_size_1d * 2);
-
-    // 4. Force the camera matrix to face the target using the clean up-vector
-    camera.lookAt(targetPoint);
-    camera.updateProjectionMatrix();
-
-    // 5. Update controls target and force an internal mathematical reset
-    controls.dispose();
-    controls = new TrackballControls(camera, renderer.domElement);
-    controls.target.copy(targetPoint);
-    controls.panSpeed = 1;
-
-    // 6. Force clean redraw matrix pipeline
-    controls.update();
-}
-
-document.getElementById("reset-button").onclick = () => {
-    resetCameraUpright();
-    switchCamera(ortho_camera);
-}
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 function resizeRendererToDisplaySize(renderer) {
@@ -219,7 +190,45 @@ let generateFinderTree = (start_row_idx, start_col_idx) => {
     }
     return tree_obj;
 }
+
+let qr_cube = new THREE.Object3D();
+let final_cube = new THREE.Object3D();
+
+function clearThreeObject(parentObject) {
+    // Loop backwards to safely remove while iterating
+    for (let i = parentObject.children.length - 1; i >= 0; i--) {
+        const child = parentObject.children[i];
+
+        // 1. Recursively clear deeply nested children first
+        if (child.children && child.children.length > 0) {
+            clearThreeObject(child);
+        }
+
+        // 2. Safely dispose of GPU assets (Geometries and Materials)
+        if (child.isMesh) {
+            if (child.geometry) {
+                child.geometry.dispose();
+            }
+
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(mat => mat.dispose());
+                } else {
+                    child.material.dispose();
+                }
+            }
+        }
+
+        // 3. Remove the object from the parent hierarchy
+        parentObject.remove(child);
+    }
+}
+
 let generateVisual = () => {
+
+    // clear the prev qr in the final_cube
+    clearThreeObject(final_cube);
+
     scene.clear();
 
     generateLight();
@@ -232,13 +241,12 @@ let generateVisual = () => {
     camera.bottom = -zoom / 2;
     camera.updateProjectionMatrix();
 
-    const final_cube = new THREE.Object3D();
     let tree_1 = generateFinderTree(0, 0);
     let tree_2 = generateFinderTree(0, pixel_size_1d - finder_size);
     let tree_3 = generateFinderTree(pixel_size_1d - finder_size, 0);
-    final_cube.add(tree_1);
-    final_cube.add(tree_2);
-    final_cube.add(tree_3);
+    qr_cube.add(tree_1);
+    qr_cube.add(tree_2);
+    qr_cube.add(tree_3);
 
     const main_tree = new THREE.Object3D();
     const main_trunk_height = 10;
@@ -320,16 +328,43 @@ let generateVisual = () => {
             }
         }
     }
-    final_cube.add(main_tree);
+    qr_cube.add(main_tree);
+    // qr rotation
+    qr_cube.rotation.z = -Math.PI / 2;
+    qr_cube.position.x = -pixel_size_1d / 2;
+    qr_cube.position.y = pixel_size_1d / 2;
+    final_cube.add(qr_cube);
 
     // the final object 3d
     scene.add(final_cube);
-    final_cube.rotation.z = -Math.PI / 2;
-    final_cube.position.x = -pixel_size_1d / 2;
-    final_cube.position.y = pixel_size_1d / 2;
+
+
 }
 getQrCodeMatrix();
 generateVisual();
+
+let run_animation = false;
+document.getElementById("reset-button").onclick = () => {
+    run_animation = false;
+    switchCamera(ortho_camera);
+
+    // rotate back so that it showing the qr
+    final_cube.rotation.x = Math.PI;
+    final_cube.rotation.z = Math.PI;
+    final_cube.position.set(0, 0, 0);
+}
+
+document.getElementById("animate-button").onclick = () => {
+    run_animation = true;
+    switchCamera(persp_camera);
+
+    // set it to upright showing tree
+    final_cube.rotation.x = Math.PI / 2;
+    final_cube.rotation.y = Math.PI;
+
+    // need to move down slightly
+    final_cube.position.y = -pixel_size_1d / 4;
+};
 
 const qr_input_button = document.getElementById("qr-input-button");
 
@@ -348,7 +383,8 @@ qr_input_button.onclick = generateQR;
 camera.position.z = pixel_size_1d * 2;
 
 let controls = new TrackballControls(camera, renderer.domElement);
-controls.panSpeed = 1;
+controls.noPan = true;
+controls.noRotate = true;
 controls.update();
 function animate() {
     dir_light.position.x = camera.position.x;
@@ -360,6 +396,11 @@ function animate() {
     if (resizeRendererToDisplaySize(renderer)) {
         camera.aspect = renderer.domElement.clientWidth / renderer.domElement.clientHeight;
         camera.updateProjectionMatrix();
+    }
+
+    if (run_animation) {
+        final_cube.rotation.z += 0.01;
+
     }
     renderer.render(scene, camera);
 }
