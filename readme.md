@@ -9,6 +9,7 @@ this is a repo try to recreate the icqr tree using threejs
 
 ## animation
 - init view show the qr code (ortho camera)
+- need to smoothen the animation between qr mode and animation mode
 - after around X seconds, show back the animated tree (perspective camera)
 
 ## run

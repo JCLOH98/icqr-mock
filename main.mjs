@@ -344,14 +344,18 @@ getQrCodeMatrix();
 generateVisual();
 
 let run_animation = false;
+let run_transition_animation = false;
+let target_pos = { x: 0, y: 0, z: 0 };
+let target_rot = { x: 0, y: 0, z: 0 };
 document.getElementById("reset-button").onclick = () => {
     run_animation = false;
     switchCamera(ortho_camera);
 
     // rotate back so that it showing the qr
-    final_cube.rotation.x = Math.PI;
-    final_cube.rotation.z = Math.PI;
-    final_cube.position.set(0, 0, 0);
+    target_rot.x = Math.PI;
+    target_rot.z = Math.PI;
+    target_pos = { x: 0, y: 0, z: 0 };
+    run_transition_animation = true;
 }
 
 document.getElementById("animate-button").onclick = () => {
@@ -359,11 +363,12 @@ document.getElementById("animate-button").onclick = () => {
     switchCamera(persp_camera);
 
     // set it to upright showing tree
-    final_cube.rotation.x = Math.PI / 2;
-    final_cube.rotation.y = Math.PI;
-
+    target_rot.x = Math.PI / 2;
+    target_rot.y = Math.PI;
     // need to move down slightly
-    final_cube.position.y = -pixel_size_1d / 4;
+    target_pos = { x: 0, y: 0, z: 0 };
+    target_pos.y = -pixel_size_1d / 4;
+    run_transition_animation = true;
 };
 
 const qr_input_button = document.getElementById("qr-input-button");
@@ -382,6 +387,10 @@ qr_input_button.onclick = generateQR;
 // for tree visualization
 camera.position.z = pixel_size_1d * 2;
 
+function approxEqual(n1, n2, tolerance = 0.01) {
+    return Math.abs(n1 - n2) < tolerance;
+}
+
 let controls = new TrackballControls(camera, renderer.domElement);
 controls.noPan = true;
 controls.noRotate = true;
@@ -398,7 +407,38 @@ function animate() {
         camera.updateProjectionMatrix();
     }
 
-    if (run_animation) {
+    if (run_transition_animation) {
+        // rotate to target position
+        if (!approxEqual(final_cube.rotation.x, target_rot.x)) {
+            final_cube.rotation.x += (target_rot.x - final_cube.rotation.x) * 0.1;
+            console.log('Rotating X', final_cube.rotation.x, target_rot.x);
+        }
+        if (!approxEqual(final_cube.rotation.y, target_rot.y)) {
+            final_cube.rotation.y += (target_rot.y - final_cube.rotation.y) * 0.1;
+        }
+        if (!approxEqual(final_cube.rotation.z, target_rot.z)) {
+            final_cube.rotation.z += (target_rot.z - final_cube.rotation.z) * 0.1;
+        }
+        // move to target position
+        if (!approxEqual(final_cube.position.x, target_pos.x)) {
+            final_cube.position.x += (target_pos.x - final_cube.position.x) * 0.1;
+        }
+        if (!approxEqual(final_cube.position.y, target_pos.y)) {
+            final_cube.position.y += (target_pos.y - final_cube.position.y) * 0.1;
+        }
+        if (!approxEqual(final_cube.position.z, target_pos.z)) {
+            final_cube.position.z += (target_pos.z - final_cube.position.z) * 0.1;
+        }
+
+        // when done the transition animation, set it to false
+        // should allow approximations
+        if (approxEqual(final_cube.rotation.x, target_rot.x) && approxEqual(final_cube.rotation.y, target_rot.y) && approxEqual(final_cube.rotation.z, target_rot.z) &&
+            approxEqual(final_cube.position.x, target_pos.x) && approxEqual(final_cube.position.y, target_pos.y) && approxEqual(final_cube.position.z, target_pos.z)) {
+            run_transition_animation = false;
+        }
+    }
+
+    if (!run_transition_animation && run_animation) {
         final_cube.rotation.z += 0.01;
 
     }
