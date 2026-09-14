@@ -425,7 +425,11 @@ function animate() {
             final_cube.rotation.y += (target_rot.y - final_cube.rotation.y) * 0.1;
         }
         if (!approxEqual(final_cube.rotation.z, target_rot.z)) {
-            final_cube.rotation.z += (target_rot.z - final_cube.rotation.z) * 0.1;
+            const z_delta = Math.atan2(
+                Math.sin(target_rot.z - final_cube.rotation.z),
+                Math.cos(target_rot.z - final_cube.rotation.z)
+            );
+            final_cube.rotation.z += z_delta * 0.1;
         }
         // move to target position
         if (!approxEqual(final_cube.position.x, target_pos.x)) {
@@ -440,7 +444,14 @@ function animate() {
 
         // when done the transition animation, set it to false
         // should allow approximations
-        if (approxEqual(final_cube.rotation.x, target_rot.x) && approxEqual(final_cube.rotation.y, target_rot.y) && approxEqual(final_cube.rotation.z, target_rot.z) &&
+        if (approxEqual(final_cube.rotation.x, target_rot.x) && approxEqual(final_cube.rotation.y, target_rot.y) &&
+            approxEqual(
+                Math.atan2(
+                    Math.sin(target_rot.z - final_cube.rotation.z),
+                    Math.cos(target_rot.z - final_cube.rotation.z)
+                ),
+                0
+            ) &&
             approxEqual(final_cube.position.x, target_pos.x) && approxEqual(final_cube.position.y, target_pos.y) && approxEqual(final_cube.position.z, target_pos.z)) {
             run_transition_animation = false;
         }
