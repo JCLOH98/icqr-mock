@@ -60,6 +60,7 @@ function resizeRendererToDisplaySize(renderer) {
 const light_color = "#999999";
 const dir_light_intensity = 10;
 const dir_light = new THREE.DirectionalLight(light_color, dir_light_intensity);
+const ambient_light = new THREE.AmbientLight(light_color, 5);
 
 // init qr items
 const qr_elem = document.getElementById("qr-code");
@@ -93,6 +94,7 @@ let getQrCodeMatrix = () => {
 
 let generateLight = () => {
     scene.add(dir_light);
+    scene.add(ambient_light);
 }
 
 // generate 3d visuals
@@ -147,7 +149,6 @@ let generateFinderTree = (start_row_idx, start_col_idx) => {
                 // generate fence
                 if (z < fence_height && is_fence) {
                     let color = FENCE_COLOR;
-
                     const geometry = new THREE.BoxGeometry(1, 1, 1);
                     const material = new THREE.MeshPhongMaterial({ color: color });
                     const fence_cube = new THREE.Mesh(geometry, material);
@@ -403,7 +404,7 @@ controls.noPan = true;
 controls.noRotate = true;
 controls.update();
 function animate() {
-    dir_light.position.x = camera.position.x;/*  */
+    dir_light.position.x = camera.position.x;
     dir_light.position.y = camera.position.y;
     dir_light.position.z = camera.position.z;
 
