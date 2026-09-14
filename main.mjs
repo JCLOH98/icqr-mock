@@ -335,6 +335,10 @@ let generateVisual = () => {
     qr_cube.position.y = pixel_size_1d / 2;
     final_cube.add(qr_cube);
 
+    final_cube.rotation.x = Math.PI;
+    final_cube.rotation.y = Math.PI;
+    final_cube.rotation.z = Math.PI;
+
     // the final object 3d
     scene.add(final_cube);
 
@@ -353,6 +357,7 @@ document.getElementById("reset-button").onclick = () => {
 
     // rotate back so that it showing the qr
     target_rot.x = Math.PI;
+    target_rot.y = Math.PI;
     target_rot.z = Math.PI;
     target_pos = { x: 0, y: 0, z: 0 };
     run_transition_animation = true;
@@ -381,13 +386,15 @@ let generateQR = () => {
 
     // update the render as well
     generateVisual();
+
+    document.getElementById("reset-button").click();
 };
 qr_input_button.onclick = generateQR;
 
 // for tree visualization
 camera.position.z = pixel_size_1d * 2;
 
-function approxEqual(n1, n2, tolerance = 0.01) {
+function approxEqual(n1, n2, tolerance = 0.0001) {
     return Math.abs(n1 - n2) < tolerance;
 }
 
@@ -396,7 +403,7 @@ controls.noPan = true;
 controls.noRotate = true;
 controls.update();
 function animate() {
-    dir_light.position.x = camera.position.x;
+    dir_light.position.x = camera.position.x;/*  */
     dir_light.position.y = camera.position.y;
     dir_light.position.z = camera.position.z;
 
